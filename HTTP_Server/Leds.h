@@ -9,5 +9,6 @@ int32_t LED_Uninitialize (void);
 int32_t LED_On (uint32_t num);
 int32_t LED_Off (uint32_t num);
 int32_t LED_SetOut (uint32_t val);
+void Parpadeo_5s(void);
 
 #endif /* __LEDS_H*/

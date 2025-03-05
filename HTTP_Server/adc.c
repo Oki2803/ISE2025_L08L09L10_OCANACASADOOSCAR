@@ -12,18 +12,18 @@ void ADC1_pins_F429ZI_config(){
 	__HAL_RCC_ADC1_CLK_ENABLE();
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
-	/*PC0     ------> ADC1_IN10
-    PA3     ------> ADC1_IN3
+	/*PC0     ------> ADC1_IN10 -> Canal 10 
+    PA3     ------> ADC1_IN3 -> Canal 3
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Pin = GPIO_PIN_0;//PIN PC0 = POT2 -> El que está pegado al RGB
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-//    GPIO_InitStruct.Pin = GPIO_PIN_3;
-//    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-//    GPIO_InitStruct.Pull = GPIO_NOPULL;
-//    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_3;//PIN PA3 = POT1 -> El que está pegado al LCD
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 		
 		
 
@@ -67,13 +67,13 @@ int ADC_Init_Single_Conversion(ADC_HandleTypeDef *hadc, ADC_TypeDef  *ADC_Instan
 	* @param channel number
 	* @retval voltage in float (resolution 12 bits and VRFE 3.3
   */
-float ADC_getVoltage(ADC_HandleTypeDef *hadc, uint32_t Channel)
+uint32_t ADC_getVoltage(ADC_HandleTypeDef *hadc, uint32_t Channel)
 	{
 		ADC_ChannelConfTypeDef sConfig = {0};
 		HAL_StatusTypeDef status;
 
 		uint32_t raw = 0;
-		float voltage = 0;
+//		float voltage = 0;
 		 /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
   sConfig.Channel = Channel;

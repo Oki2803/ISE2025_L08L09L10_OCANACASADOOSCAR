@@ -10,6 +10,12 @@ t  voltsVal = (3.3*numVal)/4096;
 t  tableSize = (numVal*100/4096);
 t  document.getElementById("ad_table").style.width = (tableSize + '%');
 t  document.getElementById("ad_volts").value = (voltsVal.toFixed(3) + ' V');
+t  adVal2 = document.getElementById("ad_value2").value;
+t  numVal2 = parseInt(adVal2, 16);
+t  voltsVal2 = (3.3*numVal2)/4096;
+t  tableSize2 = (numVal2*100/4096);
+t  document.getElementById("ad_table2").style.width = (tableSize2 + '%');
+t  document.getElementById("ad_volts2").value = (voltsVal2.toFixed(3) + ' V');
 t }
 t function periodicUpdateAd() {
 t  if(document.getElementById("adChkBox").checked == true) {
@@ -43,6 +49,15 @@ t <td align="center"><input type="text" readonly style="background-color: transp
 c g 2  size="10" id="ad_volts" value="%5.3f V"></td>
 t <td height=50><table bgcolor="#FFFFFF" border="2" cellpadding="0" cellspacing="0" width="100%"><tr>
 c g 3 <td><table id="ad_table" style="width: %d%%" border="0" cellpadding="0" cellspacing="0">
+t <tr><td bgcolor="#0000FF">&nbsp;</td></tr></table></td></tr></table></td></tr>
+t <tr><td><img src="pabb.gif">POT2:</td>
+t   <td align="center">
+t <input type="text" readonly style="background-color: transparent; border: 0px"
+c z 1  size="10" id="ad_value2" value="0x%03X"></td>
+t <td align="center"><input type="text" readonly style="background-color: transparent; border: 0px"
+c z 2  size="10" id="ad_volts2" value="%5.3f V"></td>
+t <td height=50><table bgcolor="#FFFFFF" border="2" cellpadding="0" cellspacing="0" width="100%"><tr>
+c z 3 <td><table id="ad_table2" style="width: %d%%" border="0" cellpadding="0" cellspacing="0">
 t <tr><td bgcolor="#0000FF">&nbsp;</td></tr></table></td></tr></table></td></tr>
 t </font></table>
 t <p align=center>

@@ -20,6 +20,7 @@ void symbolToLocalBuffer_L2(uint8_t symbol);
 void symbolToLocalBuffer(uint8_t line,uint8_t symbol);
 void write_lcd(char cadena[], int linea);
 void cleanBuffer(void);
+void limpiar_LCD(void);
 
 extern unsigned char buffer[512];
 

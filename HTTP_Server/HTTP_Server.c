@@ -7,16 +7,14 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdio.h>
-
 #include "main.h"
-
 #include "rl_net.h"                     // Keil.MDK-Pro::Network:CORE
-
 #include "stm32f4xx_hal.h"              // Keil::Device:STM32Cube HAL:Common
 #include "Leds.h"                 
 #include "Board_Buttons.h"              // ::Board Support:Buttons
 #include "lcd.h"
 #include "Adc.h"                  
+#include "Rtc.h"
 
 // Main stack size must be multiple of 8 Bytes
 #define APP_MAIN_STK_SZ (1024U)
@@ -38,6 +36,8 @@ extern char lcd_text[2][20+1];
 extern osThreadId_t TID_Display;
 extern osThreadId_t TID_Led;
 
+/* Booleano que indica si la alarma está activa o no*/
+extern bool alarma_activada;
 bool LEDrun;
 char lcd_text[2][20+1] = { "LCD line 1",
                            "LCD line 2" };
@@ -46,22 +46,29 @@ ADC_HandleTypeDef adchandle; //handler definition
 /* Thread IDs */
 osThreadId_t TID_Display;
 osThreadId_t TID_Led;
+osThreadId_t TID_Alarma;
+
 
 /* Thread declarations */
 static void BlinkLed (void *arg);
 static void Display  (void *arg);
+static void	Alarma	 (void *arg);																
 
 __NO_RETURN void app_main (void *arg);
 
 /* Read analog inputs */
 uint16_t AD_in (uint32_t ch) {
-  float val = 0;
+  uint32_t val = 0;
 
   if (ch == 0) {
 		ADC_Init_Single_Conversion(&adchandle , ADC1); //ADC1 configuration
-    //while (ADC_ConversionDone () < 0);
+    val = ADC_getVoltage(&adchandle, 3);
+  }
+	else if (ch == 1) {
+		ADC_Init_Single_Conversion(&adchandle , ADC1); //ADC1 configuration
     val = ADC_getVoltage(&adchandle, 10);
   }
+	
   return ((uint16_t)val);
 }
 
@@ -83,6 +90,26 @@ void netDHCP_Notify (uint32_t if_num, uint8_t option, const uint8_t *val, uint32
   }
 }
 
+
+/*----------------------------------------------------------------------------
+  Thread 'Alarma': Comprobar si salta la alarma
+ *---------------------------------------------------------------------------*/
+static __NO_RETURN void Alarma (void *arg) {
+
+	RTC_AlarmConfig();//Configuramos la alarma del rtc
+
+	while (1) {
+		RTC_CalendarShow();
+		if(alarma_activada==true){
+			alarma_activada=false;
+      Parpadeo_5s();
+    }
+		HAL_Delay(1000);
+	}
+}
+
+
+
 /*----------------------------------------------------------------------------
   Thread 'Display': LCD display handler
  *---------------------------------------------------------------------------*/
@@ -92,7 +119,7 @@ static __NO_RETURN void Display (void *arg) {
   (void)arg;
 	
 	startLCD();
-	cleanBuffer();
+	limpiar_LCD();
 
   while(1) {
     /* Wait for signal from DHCP */
@@ -111,7 +138,6 @@ static __NO_RETURN void Display (void *arg) {
 
   }
 }
-
 
 
 
@@ -145,13 +171,15 @@ __NO_RETURN void app_main (void *arg) {
   (void)arg;
 
   LED_Initialize();
-//	Buttons_Initialize();
 	ADC1_pins_F429ZI_config(); //specific PINS configuration -> Inicializamos los pines del ADC
 
   netInitialize ();
+  RTC_configuration();//Configuramos el RTC
+  RTC_CalendarConfig();//Configuramos la hora y fecha iniciales del RTC
 
 	TID_Led     = osThreadNew (BlinkLed, NULL, NULL);
   TID_Display = osThreadNew (Display,  NULL, NULL);
+	TID_Alarma  = osThreadNew (Alarma,  NULL, NULL);
 
   osThreadExit();
 }

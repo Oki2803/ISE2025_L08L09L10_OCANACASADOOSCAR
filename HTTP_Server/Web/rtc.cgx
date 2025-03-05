@@ -1,0 +1,11 @@
+t <form>
+t <text>
+t <id>HORA</id>
+c p 1<value>%s</value>
+t </text>
+t <text>
+t <id>FECHA</id>
+c p 2<value>%s</value>
+t </text>
+t </form>
+.

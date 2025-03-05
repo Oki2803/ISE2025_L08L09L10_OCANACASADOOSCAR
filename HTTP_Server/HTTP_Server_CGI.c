@@ -11,13 +11,19 @@
 #include <string.h>
 #include "cmsis_os2.h"                  // ::CMSIS:RTOS2
 #include "rl_net.h"                     // Keil.MDK-Pro::Network:CORE
-
-#include "Board_LED.h"                  // ::Board Support:LED
+#include "Leds.h"  
+#include "Rtc.h"
 
 #if      defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
 #pragma  clang diagnostic push
 #pragma  clang diagnostic ignored "-Wformat-nonliteral"
 #endif
+
+
+extern RTC_DateTypeDef sdatestructureget;
+extern RTC_TimeTypeDef stimestructureget;
+extern char Hora[40];
+extern char Fecha[40];
 
 // http_server.c
 extern uint16_t AD_in (uint32_t ch);
@@ -344,8 +350,37 @@ uint32_t netCGI_Script (const char *env, char *buf, uint32_t buflen, uint32_t *p
           break;
       }
       break;
-
-    case 'g':
+			
+			
+		case 'h': 	
+			// RTC Module control from 'rtc.cgi'
+			switch (env[2]){
+				case '1':
+					sprintf(Hora, "%02d:%02d:%02d", stimestructureget.Hours, stimestructureget.Minutes, stimestructureget.Seconds);
+					len = (uint32_t)sprintf (buf,&env[4], Hora);
+				break;
+				case '2':
+					sprintf(Fecha, "%02d-%02d-%02d" , sdatestructureget.Date,sdatestructureget.Month, 2000 + sdatestructureget.Year);
+					len = (uint32_t)sprintf (buf, &env[4], Fecha);
+				break;
+			}
+		break;
+			
+		case 'p'://Para el RTC
+		// RTC Input from 'rtc.cgx'
+			switch (env[2]){
+				case '1':
+					sprintf(Hora, "Hora: %02d:%02d:%02d", stimestructureget.Hours, stimestructureget.Minutes, stimestructureget.Seconds);
+					len = (uint32_t)sprintf (buf,&env[4], Hora);
+				break;
+				case '2':
+					sprintf(Fecha, "Fecha: %02d-%02d-%02d" , sdatestructureget.Date,sdatestructureget.Month, 2000 + sdatestructureget.Year);
+					len = (uint32_t)sprintf (buf, &env[4], Fecha);
+				break;
+			}	
+		break;
+		
+    case 'g'://Para el primer potenciometro
       // AD Input from 'ad.cgi'
       switch (env[2]) {
         case '1':
@@ -361,18 +396,42 @@ uint32_t netCGI_Script (const char *env, char *buf, uint32_t buflen, uint32_t *p
           break;
       }
       break;
+			
+		 case 'z'://Para el segundo potenciometro
+      // AD Input from 'ad2.cgi'
+      switch (env[2]) {
+        case '1':
+          adv = AD_in (1);
+          len = (uint32_t)sprintf (buf, &env[4], adv);
+          break;
+        case '2':
+          len = (uint32_t)sprintf (buf, &env[4], (double)((float)adv*3.3f)/4096);
+          break;
+        case '3':
+          adv = (adv * 100) / 4096;
+          len = (uint32_t)sprintf (buf, &env[4], adv);
+          break;
+      }
+      break;	
+			
+			case 'x'://Para el primer potenciometro
+				// AD Input from 'ad.cgx'
+				adv = AD_in (0);
+				len = (uint32_t)sprintf (buf, &env[1], adv);
+				break;
+			
+			 case 't'://Para el segundo potenciometro
+				// AD Input from 'ad2.cgx'
+				adv = AD_in (1);
+				len = (uint32_t)sprintf (buf, &env[1], adv);
+				break;
 
-    case 'x':
-      // AD Input from 'ad.cgx'
-      adv = AD_in (0);
-      len = (uint32_t)sprintf (buf, &env[1], adv);
-      break;
-
-    case 'y':
-      // Button state from 'button.cgx'
-      len = (uint32_t)sprintf (buf, "<checkbox><id>button%c</id><on>%s</on></checkbox>",
-                               env[1], (get_button () & (1 << (env[1]-'0'))) ? "true" : "false");
-      break;
+			 
+			case 'y':
+				// Button state from 'button.cgx'
+				len = (uint32_t)sprintf (buf, "<checkbox><id>button%c</id><on>%s</on></checkbox>",
+																 env[1], (get_button () & (1 << (env[1]-'0'))) ? "true" : "false");
+				break;
   }
   return (len);
 }

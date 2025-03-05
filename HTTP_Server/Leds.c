@@ -34,6 +34,8 @@ int32_t LED_Initialize(void){
   /*Init GPIOD Pins*/	
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 	
+	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13, GPIO_PIN_SET);//Para que el RGB inicie apagado
+
 	return 0;
 }
 
@@ -150,4 +152,14 @@ int32_t LED_SetOut (uint32_t val) {
   return 0;
 }
 
+//Función echa expresamente para la funcionalidad de la alarma del apartado 1 de la P2
+void Parpadeo_5s(void){
+	
+	for(int i = 0; i < 5; i++){
+		LED_On(0);
+		HAL_Delay(500);
+		LED_Off(0);
+		HAL_Delay(500);		
+	}
 
+}

@@ -29,6 +29,12 @@ void cleanBuffer(void){
 }
 
 
+void limpiar_LCD(){
+	cleanBuffer();
+	LCD_update();
+}
+
+
 void LCD_update(void){
 
   int i;
