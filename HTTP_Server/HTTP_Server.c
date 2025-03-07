@@ -15,6 +15,7 @@
 #include "lcd.h"
 #include "Adc.h"                  
 #include "Rtc.h"
+#include "SNTP.h"
 
 // Main stack size must be multiple of 8 Bytes
 #define APP_MAIN_STK_SZ (1024U)
@@ -38,6 +39,12 @@ extern osThreadId_t TID_Led;
 
 /* Booleano que indica si la alarma está activa o no*/
 extern bool alarma_activada;
+/* Estructuras y variables para representar la hora en el display */
+extern RTC_DateTypeDef sdatestructure;
+extern RTC_TimeTypeDef stimestructure;
+extern char Hora[40];
+extern char Fecha[40];
+
 bool LEDrun;
 char lcd_text[2][20+1] = { "LCD line 1",
                            "LCD line 2" };
@@ -90,6 +97,29 @@ void netDHCP_Notify (uint32_t if_num, uint8_t option, const uint8_t *val, uint32
   }
 }
 
+/* Inicialización y configuración del pulsador azul = PC13 */
+void Pulsador_Azul(void){ 
+  
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+  /*Enable clock to GPIO-C*/
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
+
+//Rutina a la Interrupcion del pulsador
+
+void EXTI15_10_IRQHandler(void){
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+}
+
+
 
 /*----------------------------------------------------------------------------
   Thread 'Alarma': Comprobar si salta la alarma
@@ -100,6 +130,7 @@ static __NO_RETURN void Alarma (void *arg) {
 
 	while (1) {
 		RTC_CalendarShow();
+		osThreadFlagsSet(TID_Display,0x02);//Mandamos un flag al display para que pinte la hora
 		if(alarma_activada==true){
 			alarma_activada=false;
       Parpadeo_5s();
@@ -123,22 +154,31 @@ static __NO_RETURN void Display (void *arg) {
 
   while(1) {
     /* Wait for signal from DHCP */
-    flag = osThreadFlagsWait (0x01U, osFlagsWaitAny, osWaitForever);//Flag que se envia en el HTTP_Server_CGI
+    flag = osThreadFlagsWait (0x03U, osFlagsWaitAny, osWaitForever);//Ponemos un 3 porque queremos recibir el 1 del cgi y el 2 del calendarshow
 
 		cleanBuffer();
 		
-		if(flag == 0x01){
+		if(flag == 0x01){//Flag para pintar desde la página
+			
 			write_lcd(lcd_text[0], 1);
 			LCD_update_L1();
 
 			write_lcd(lcd_text[1], 2);
 			LCD_update_L2();
+			
+		}else if(flag == 0x02){//Flag para pintar la hora
+			
+		  /* Display time Format : hh:mm:ss */
+			sprintf(Hora, "%2d:%2d:%2d", stimestructure.Hours, stimestructure.Minutes, stimestructure.Seconds);
+			write_lcd(Hora,1);
+			
+			/* Display date Format : mm-dd-yy */
+			sprintf(Fecha, "%2d-%2d-%2d", sdatestructure.Date, sdatestructure.Month, 2000 + sdatestructure.Year);
+			write_lcd(Fecha,2);
+			
 		}
-		cleanBuffer();
-
   }
 }
-
 
 
 /*----------------------------------------------------------------------------
@@ -175,7 +215,8 @@ __NO_RETURN void app_main (void *arg) {
 
   netInitialize ();
   RTC_configuration();//Configuramos el RTC
-  RTC_CalendarConfig();//Configuramos la hora y fecha iniciales del RTC
+	Init_ThSNTP();
+	Pulsador_Azul();
 
 	TID_Led     = osThreadNew (BlinkLed, NULL, NULL);
   TID_Display = osThreadNew (Display,  NULL, NULL);

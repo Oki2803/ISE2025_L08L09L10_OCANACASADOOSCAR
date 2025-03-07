@@ -20,8 +20,8 @@
 #endif
 
 
-extern RTC_DateTypeDef sdatestructureget;
-extern RTC_TimeTypeDef stimestructureget;
+extern RTC_DateTypeDef sdatestructure;
+extern RTC_TimeTypeDef stimestructure;
 extern char Hora[40];
 extern char Fecha[40];
 
@@ -356,28 +356,14 @@ uint32_t netCGI_Script (const char *env, char *buf, uint32_t buflen, uint32_t *p
 			// RTC Module control from 'rtc.cgi'
 			switch (env[2]){
 				case '1':
-					sprintf(Hora, "%02d:%02d:%02d", stimestructureget.Hours, stimestructureget.Minutes, stimestructureget.Seconds);
+					sprintf(Hora, "%02d:%02d:%02d", stimestructure.Hours, stimestructure.Minutes, stimestructure.Seconds);
 					len = (uint32_t)sprintf (buf,&env[4], Hora);
 				break;
 				case '2':
-					sprintf(Fecha, "%02d-%02d-%02d" , sdatestructureget.Date,sdatestructureget.Month, 2000 + sdatestructureget.Year);
+					sprintf(Fecha, "%02d-%02d-%02d" , sdatestructure.Date,sdatestructure.Month, 2000 + sdatestructure.Year);
 					len = (uint32_t)sprintf (buf, &env[4], Fecha);
 				break;
 			}
-		break;
-			
-		case 'p'://Para el RTC
-		// RTC Input from 'rtc.cgx'
-			switch (env[2]){
-				case '1':
-					sprintf(Hora, "Hora: %02d:%02d:%02d", stimestructureget.Hours, stimestructureget.Minutes, stimestructureget.Seconds);
-					len = (uint32_t)sprintf (buf,&env[4], Hora);
-				break;
-				case '2':
-					sprintf(Fecha, "Fecha: %02d-%02d-%02d" , sdatestructureget.Date,sdatestructureget.Month, 2000 + sdatestructureget.Year);
-					len = (uint32_t)sprintf (buf, &env[4], Fecha);
-				break;
-			}	
 		break;
 		
     case 'g'://Para el primer potenciometro

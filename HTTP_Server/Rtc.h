@@ -13,7 +13,7 @@
 
 //Prototipos de funciones
 void RTC_configuration(void);
-void RTC_CalendarConfig(void);
+void RTC_CalendarConfig(uint8_t hora, uint8_t min, uint8_t sec, uint8_t year, uint8_t mes, uint8_t dia);
 void RTC_CalendarShow(void);
 void RTC_lectura_BackUp(void);
 void Error_Handler(void);

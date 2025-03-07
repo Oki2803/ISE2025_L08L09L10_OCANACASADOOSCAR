@@ -153,12 +153,24 @@ int32_t LED_SetOut (uint32_t val) {
 }
 
 //Función echa expresamente para la funcionalidad de la alarma del apartado 1 de la P2
-void Parpadeo_5s(void){
+void Parpadeo_5s(void){//Led Verde de la stm32
 	
 	for(int i = 0; i < 5; i++){
 		LED_On(0);
 		HAL_Delay(500);
 		LED_Off(0);
+		HAL_Delay(500);		
+	}
+
+}
+
+//Función echa expresamente para la funcionalidad del SNTP del apartado 4 de la P2
+void Parpadeo_2s(void){//Led rojo de la stm32
+	
+	for(int i = 0; i < 2; i++){
+		LED_On(2);
+		HAL_Delay(500);
+		LED_Off(2);
 		HAL_Delay(500);		
 	}
 
