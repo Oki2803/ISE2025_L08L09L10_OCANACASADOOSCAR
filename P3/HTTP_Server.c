@@ -16,6 +16,7 @@
 #include "Adc.h"                  
 #include "Rtc.h"
 #include "SNTP.h"
+#include "Powermodes.h"
 
 // Main stack size must be multiple of 8 Bytes
 #define APP_MAIN_STK_SZ (1024U)
@@ -45,6 +46,7 @@ extern RTC_TimeTypeDef stimestructure;
 extern char Hora[40];
 extern char Fecha[40];
 
+bool modo_sleep = false;
 bool LEDrun;
 char lcd_text[2][20+1] = { "LCD line 1",
                            "LCD line 2" };
@@ -54,13 +56,19 @@ ADC_HandleTypeDef adchandle; //handler definition
 osThreadId_t TID_Display;
 osThreadId_t TID_Led;
 osThreadId_t TID_Alarma;
+osThreadId_t TID_Led_Verde;
 
 
 /* Thread declarations */
-static void BlinkLed (void *arg);
-static void Display  (void *arg);
-static void	Alarma	 (void *arg);																
+static void BlinkLed  (void *arg);
+static void Display   (void *arg);
+static void	Alarma	  (void *arg);	
+static void	Led_verde (void *arg);														 
 
+/* Timer IDs */													 
+osTimerId_t tim_modo_sleep; //Identificador del timer virtual que nos mete en el modo sleep	
+static void Timer_Callback_sleep(void const *arg);//Prototipo de la función
+													 
 __NO_RETURN void app_main (void *arg);
 
 /* Read analog inputs */
@@ -97,27 +105,36 @@ void netDHCP_Notify (uint32_t if_num, uint8_t option, const uint8_t *val, uint32
   }
 }
 
-/* Inicialización y configuración del pulsador azul = PC13 */
-void Pulsador_Azul(void){ 
-  
-	GPIO_InitTypeDef GPIO_InitStruct;
 
-  /*Enable clock to GPIO-C*/
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+/*----------------------------------------------------------------------------
+  Thread 'LED_VERDE': Hace parpadear el led verde para ver si entramos en el modo bajo consumo
+ *---------------------------------------------------------------------------*/
+static __NO_RETURN void Led_verde (void *arg) {
+
+	tim_modo_sleep = osTimerNew((osTimerFunc_t)&Timer_Callback_sleep, osTimerOnce, NULL, NULL);
+	osTimerStart(tim_modo_sleep, 15000u);
 	
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	while (1) {
+		
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);//Parpadeo del led verde cada 100ms
+		osDelay(100);
+		
+		if(modo_sleep == true){//De esta forma volvemos a iniciar el timer una vez salimos del modo sleep
+			osTimerStart(tim_modo_sleep, 15000u);
+			modo_sleep = false;
+		}
+		
+	}
 }
 
-//Rutina a la Interrupcion del pulsador
-
-void EXTI15_10_IRQHandler(void){
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+static void Timer_Callback_sleep(void const *arg){ //Callback del timer
+	
+	Encender_rojo();//Lo encendemos antes de entrar en el modo sleep
+	SleepMode_Measure();
+	
 }
+
 
 
 
@@ -133,7 +150,7 @@ static __NO_RETURN void Alarma (void *arg) {
 		osThreadFlagsSet(TID_Display,0x02);//Mandamos un flag al display para que pinte la hora
 		if(alarma_activada==true){
 			alarma_activada=false;
-      Parpadeo_5s();
+      //Parpadeo_5s();
     }
 		HAL_Delay(1000);
 	}
@@ -216,11 +233,11 @@ __NO_RETURN void app_main (void *arg) {
   netInitialize ();
   RTC_configuration();//Configuramos el RTC
 	Init_ThSNTP();
-	Pulsador_Azul();
 
 	TID_Led     = osThreadNew (BlinkLed, NULL, NULL);
   TID_Display = osThreadNew (Display,  NULL, NULL);
 	TID_Alarma  = osThreadNew (Alarma,  NULL, NULL);
+	TID_Led_Verde  = osThreadNew (Led_verde,  NULL, NULL);
 
   osThreadExit();
 }

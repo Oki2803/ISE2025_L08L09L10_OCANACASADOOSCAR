@@ -11,5 +11,7 @@ int32_t LED_Off (uint32_t num);
 int32_t LED_SetOut (uint32_t val);
 void Parpadeo_5s(void);
 void Parpadeo_2s(void);
+void Encender_rojo(void);
+void Apagar_rojo(void);
 
 #endif /* __LEDS_H*/

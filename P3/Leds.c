@@ -175,3 +175,18 @@ void Parpadeo_2s(void){//Led rojo de la stm32
 	}
 
 }
+
+
+//Función echa expresamente para el apartado 2 de la P3
+void Encender_rojo(void){//Led rojo de la stm32
+	
+	LED_On(2);
+	
+}
+//Función echa expresamente para el apartado 2 de la P3
+void Apagar_rojo(void){//Led rojo de la stm32
+	
+	LED_Off(2);
+	
+}
+
