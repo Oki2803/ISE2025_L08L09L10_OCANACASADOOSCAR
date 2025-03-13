@@ -143,16 +143,16 @@ static void Timer_Callback_sleep(void const *arg){ //Callback del timer
  *---------------------------------------------------------------------------*/
 static __NO_RETURN void Alarma (void *arg) {
 
-	RTC_AlarmConfig();//Configuramos la alarma del rtc
+	//RTC_AlarmConfig();//Configuramos la alarma del rtc
 
 	while (1) {
 		RTC_CalendarShow();
 		osThreadFlagsSet(TID_Display,0x02);//Mandamos un flag al display para que pinte la hora
-		if(alarma_activada==true){
-			alarma_activada=false;
-      //Parpadeo_5s();
-    }
-		HAL_Delay(1000);
+//		if(alarma_activada==true){
+//			alarma_activada=false;
+//				Parpadeo_5s();
+//    }
+		osDelay(1000);
 	}
 }
 
